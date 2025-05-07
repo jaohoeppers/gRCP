@@ -1,5 +1,5 @@
-server/venv
-client/venv
+gRPC/server/venv
+gRPC/client/venv
 .venv
 REST/venv
 SOAP/venv

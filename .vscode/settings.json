@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./server/users_pb2_",
+        "./server/users_pb2_"
+    ]
+}

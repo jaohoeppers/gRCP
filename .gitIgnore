@@ -1,3 +1,5 @@
 server/venv
 client/venv
 .venv
+REST/venv
+SOAP/venv

@@ -1,10 +1,17 @@
 from flask import Flask, request, jsonify
-import os
 import argparse
-import REST.client.users_pb2 as users_pb2
-import REST.client.users_pb2_grpc as users_pb2_grpc
+
 import uuid
 import grpc
+import os
+import sys
+
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(root_dir)
+
+from Servidor_gRCP.gRPC.server import users_pb2
+from Servidor_gRCP.gRPC.server import users_pb2_grpc
+
 
 app = Flask(__name__)
 channel = None
@@ -21,7 +28,7 @@ def cleanup(exception=None):
     if channel is not None:
         channel.close()
 
-@app.route('/items', methods=['POST'])
+@app.route('/item', methods=['POST'])
 def create_item():
     
     init_grpc()
@@ -67,6 +74,60 @@ def get_items():
         
     except grpc.RpcError as e:
         return jsonify({"error": str(e.details())}), 500
+    
+#search by id
+@app.route('/item/<string:user_id>', methods=['GET'])
+def get_item_by_id(user_id):
+    init_grpc()
+    
+    try:
+        response = stub.GetUserById(users_pb2.GetUserByIdRequest(id=user_id))
+        return jsonify({
+            "id": response.user.id,
+            "name": response.user.name,
+            "email": response.user.email,
+            "password": response.user.password
+        }), 200
+    except grpc.RpcError as e:
+        return jsonify({"error": str(e.details())}), 500
+
+#update by id
+@app.route('/item/<string:user_id>', methods=['PUT'])
+def update_item(user_id):
+    init_grpc()
+    
+    data = request.get_json()
+    
+    if not any(key in data for key in ['name', 'email', 'password']):
+        return jsonify({'error': 'At least one field to update is required'}), 400
+    
+    try:
+        user = users_pb2.User(
+            id=user_id,
+            name=data.get('name', ''),
+            email=data.get('email', ''),
+            password=data.get('password', '')
+        )
+        response = stub.UpdateUser(users_pb2.UpdateUserRequest(user=user))
+        return jsonify({
+            "id": response.user.id,
+            "name": response.user.name,
+            "email": response.user.email
+        }), 200
+    except grpc.RpcError as e:
+        return jsonify({"error": str(e.details())}), 500
+
+#delete by id
+@app.route('/item/<string:user_id>', methods=['DELETE'])
+def delete_item(user_id):
+    init_grpc()
+    
+    try:
+        response = stub.DeleteUser(users_pb2.DeleteUserRequest(id=user_id))
+        return jsonify({"message": "User deleted successfully"}), 200
+    except grpc.RpcError as e:
+        return jsonify({"error": str(e.details())}), 500
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

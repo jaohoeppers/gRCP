@@ -4,8 +4,12 @@ import json
 import os
 import grpc
 import warnings
+import sys
 
-import users_pb2 as users__pb2
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(root_dir)
+
+from Servidor_gRCP.gRPC.server import users_pb2 as users__pb2
 
 GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
@@ -69,9 +73,6 @@ class UsersServicer(object):
     def __init__(self):
         self.users_file = "users.txt"
 
-    def __init__(self):
-        self.users_file = "users.txt"
-
     def GetUsers(self, request, context):
         try:
             users_list = []
@@ -101,10 +102,31 @@ class UsersServicer(object):
             return users__pb2.GetUsersResponse()
     
     def GetUserById(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        try:
+            # Extrai os id da requisição
+            user = request.user
+            user_id = user.id
+            
+            
+            # Lê usuários existentes
+            existing_users = []
+            if os.path.exists(self.users_file):
+                with open(self.users_file, 'r') as f:
+                    for line in f:
+                        if line.strip():
+                            existing_users.append(json.loads(line))
+            
+            # Verifica se o email já existe
+            for u in existing_users:
+                if u['id'] == user_id:
+                    response = users__pb2.GetUserByIdResponse()
+                    response.user.CopyFrom(u)
+                    return response
+            
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f'Error searching user: {str(e)}')
+            return users__pb2.GetUserByIdResponse()
     
     def CreateUser(self, request, context):
         try:
@@ -146,16 +168,91 @@ class UsersServicer(object):
             return users__pb2.CreateUserResponse()
 
     def UpdateUser(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        try:
+            # Extrai os dados do usuário da requisição
+            user = request.user
+            user_data = {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "password": user.password
+            }
+            
+            # Lê usuários existentes
+            existing_users = []
+            if os.path.exists(self.users_file):
+                with open(self.users_file, 'r') as f:
+                    for line in f:
+                        if line.strip():
+                            existing_users.append(json.loads(line))
+            
+            # Verifica se o id já existe
+            user_found = False
+            for i, u in enumerate(existing_users):
+                if u['id'] == user_data['id']:
+                    existing_users[i] = user_data
+                    user_found = True
+                    break
+            
+            if user_found:
+                # Write updated users back to the file
+                with open(self.users_file, 'w') as f:
+                    for user in existing_users:
+                        f.write(json.dumps(user) + '\n')
+                
+                # Retorna a resposta
+                response = users__pb2.UpdateUserResponse()
+                response.user.CopyFrom(request.user)
+                return response
+                
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details(f'User by ID: {user.id} not found for update')
+            return users__pb2.UpdateUserResponse()     
+            
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f'Error updating user: {str(e)}')
+            return users__pb2.UpdateUserResponse()
 
     def DeleteUser(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        def DeleteUser(self, request, context):
+            try:
+                # Get user ID from request
+                user_id = request.user.id
+                
+                # Read existing users
+                existing_users = []
+                if os.path.exists(self.users_file):
+                    with open(self.users_file, 'r') as f:
+                        for line in f:
+                            if line.strip():
+                                existing_users.append(json.loads(line))
+                
+                # Find and remove user
+                user_found = False
+                updated_users = []
+                for user in existing_users:
+                    if user['id'] != user_id:
+                        updated_users.append(user)
+                    else:
+                        user_found = True
+                
+                if user_found:
+                    # Write remaining users back to file
+                    with open(self.users_file, 'w') as f:
+                        for user in updated_users:
+                            f.write(json.dumps(user) + '\n')
+                            
+                    return users__pb2.DeleteUserResponse()
+                
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details(f'User with ID {user_id} not found')
+                return users__pb2.DeleteUserResponse()
+                
+            except Exception as e:
+                context.set_code(grpc.StatusCode.INTERNAL)
+                context.set_details(f'Error deleting user: {str(e)}')
+                return users__pb2.DeleteUserResponse()
 
 
 def add_UsersServicer_to_server(servicer, server):

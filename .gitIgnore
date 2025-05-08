@@ -1,5 +1,7 @@
 gRPC/server/venv
 gRPC/client/venv
 .venv
+.__pycache__
 REST/venv
 SOAP/venv
+.env

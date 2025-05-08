@@ -6,11 +6,11 @@ BASE_URL = 'http://127.0.0.1:5000'
 def test_crud_operations():
     # CREATE - Criar alguns itens
     print("\n=== Testando CREATE ===")
-    create_response1 = requests.post(f'{BASE_URL}/items', 
+    create_response1 = requests.post(f'{BASE_URL}/item', 
                                    json={'name': 'Item 1','email':'joao@gmail.com','password':'teste'})
     print(f"Criando Item 1: {create_response1.json()}")
     
-    create_response2 = requests.post(f'{BASE_URL}/items', 
+    create_response2 = requests.post(f'{BASE_URL}/item', 
                                    json={'name': 'Item 2','email':'giga@funga','password':'123'})
     print(f"Criando Item 2: {create_response2.json()}")
 

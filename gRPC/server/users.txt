@@ -1,6 +1,2 @@
-{"id": "f9a5922d-5b88-4652-a984-e616441d0f11", "name": "Jo\u00e3o Silva", "email": "joao@email.com", "password": "senha123"}
-{"id": "184083d9-a7ef-4ece-86b1-4ec2b9c7ec6b", "name": "Maria Santos", "email": "maria@email.com", "password": "senha456"}
-{"id": "e23a4553-0f42-43ca-a71b-188591682127", "name": "Pedro Souza", "email": "pedro@email.com", "password": "senha789"}
-{"id": "2ca325c1-64b1-4797-b992-49568f7abefc", "name": "Item 1", "email": "joao@gmail.com", "password": "teste"}
-{"id": "3846930b-6c72-45a2-bdd9-cdeeb43e28e3", "name": "Item 2", "email": "giga@funga", "password": "123"}
-{"id": "", "name": "SOAP Test User", "email": "soap@test.com", "password": "soap123"}
+{"id": "570aa9a6-1c75-407f-b628-b639c46ff54d", "name": "Item 1", "email": "joao@gmail.com", "password": "teste"}
+{"id": "93c0c66a-4f75-4705-afea-2d1371de2350", "name": "Item 2", "email": "giga@funga", "password": "123"}

@@ -4,8 +4,8 @@ from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
 from wsgiref.simple_server import make_server
 import grpc
-import users_pb2
-import users_pb2_grpc
+import gRPC.server.users_pb2 as users_pb2
+import gRPC.server.users_pb2_grpc as users_pb2_grpc
 
 # GRPC channel configuration
 channel = grpc.insecure_channel('localhost:50051')
@@ -59,6 +59,57 @@ class UserService(ServiceBase):
         except grpc.RpcError as e:
             ctx.transport.resp_code = 500
             raise ValueError(f"gRPC error: {str(e)}")
+        
+    @rpc(String, _returns=User)
+    def get_user_by_id(ctx, user_id):
+        try:
+            # Make gRPC request
+            grpc_response = grpc_stub.GetUserById(users_pb2.GetUserByIdRequest(id=user_id))
+            
+            # Convert gRPC response to SOAP response
+            return User(
+                id=grpc_response.user.id,
+                name=grpc_response.user.name,
+                email=grpc_response.user.email,
+                password=grpc_response.user.password
+            )
+        except grpc.RpcError as e:
+            ctx.transport.resp_code = 500
+            raise ValueError(f"gRPC error: {str(e)}")
+
+    @rpc(String, String, String, String, _returns=User)
+    def update_user(ctx, user_id, name, email, password):
+        try:
+            # Create gRPC request
+            user = users_pb2.User(
+                id=user_id,
+                name=name,
+                email=email,
+                password=password
+            )
+            grpc_response = grpc_stub.UpdateUser(users_pb2.UpdateUserRequest(user=user))
+            
+            # Convert gRPC response to SOAP response
+            return User(
+                id=grpc_response.user.id,
+                name=grpc_response.user.name,
+                email=grpc_response.user.email,
+                password=grpc_response.user.password
+            )
+        except grpc.RpcError as e:
+            ctx.transport.resp_code = 500
+            raise ValueError(f"gRPC error: {str(e)}")
+
+    @rpc(String, _returns=Unicode)
+    def delete_user(ctx, user_id):
+        try:
+            # Make gRPC request
+            grpc_stub.DeleteUser(users_pb2.DeleteUserRequest(id=user_id))
+            return "User deleted successfully"
+        except grpc.RpcError as e:
+            ctx.transport.resp_code = 500
+            raise ValueError(f"gRPC error: {str(e)}")
+
 
 if __name__ == '__main__':
     try:

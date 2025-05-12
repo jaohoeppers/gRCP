@@ -195,7 +195,6 @@ class UsersServicer(object):
                     break
             
             if user_found:
-                # Write updated users back to the file
                 with open(self.users_file, 'w') as f:
                     for user in existing_users:
                         f.write(json.dumps(user) + '\n')
@@ -215,44 +214,42 @@ class UsersServicer(object):
             return users__pb2.UpdateUserResponse()
 
     def DeleteUser(self, request, context):
-        def DeleteUser(self, request, context):
-            try:
-                # Get user ID from request
-                user_id = request.user.id
-                
-                # Read existing users
-                existing_users = []
-                if os.path.exists(self.users_file):
-                    with open(self.users_file, 'r') as f:
-                        for line in f:
-                            if line.strip():
-                                existing_users.append(json.loads(line))
-                
-                # Find and remove user
-                user_found = False
-                updated_users = []
-                for user in existing_users:
-                    if user['id'] != user_id:
-                        updated_users.append(user)
-                    else:
-                        user_found = True
-                
-                if user_found:
-                    # Write remaining users back to file
-                    with open(self.users_file, 'w') as f:
-                        for user in updated_users:
-                            f.write(json.dumps(user) + '\n')
-                            
-                    return users__pb2.DeleteUserResponse()
-                
-                context.set_code(grpc.StatusCode.NOT_FOUND)
-                context.set_details(f'User with ID {user_id} not found')
+        try:
+            # Extrai o usuario do request
+            user_id = request.user.id
+            
+            # Busca todos os usuarios
+            existing_users = []
+            if os.path.exists(self.users_file):
+                with open(self.users_file, 'r') as f:
+                    for line in f:
+                        if line.strip():
+                            existing_users.append(json.loads(line))
+            
+            # Busca e remove o usuario
+            user_found = False
+            updated_users = []
+            for user in existing_users:
+                if user['id'] != user_id:
+                    updated_users.append(user)
+                else:
+                    user_found = True
+            
+            if user_found:
+                with open(self.users_file, 'w') as f:
+                    for user in updated_users:
+                        f.write(json.dumps(user) + '\n')
+                        
                 return users__pb2.DeleteUserResponse()
-                
-            except Exception as e:
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(f'Error deleting user: {str(e)}')
-                return users__pb2.DeleteUserResponse()
+            
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details(f'User with ID {user_id} not found')
+            return users__pb2.DeleteUserResponse()
+            
+        except Exception as e:
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f'Error deleting user: {str(e)}')
+            return users__pb2.DeleteUserResponse()
 
 
 def add_UsersServicer_to_server(servicer, server):
